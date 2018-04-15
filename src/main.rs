@@ -1,5 +1,4 @@
 extern crate chrono;
-extern crate clap;
 use chrono::prelude::*;
 
 fn format_time(time : DateTime<Local>) -> String {
@@ -24,10 +23,9 @@ fn bedtime_if(time : DateTime<Local>) {
     println!("If you want to wake up at {}, you should try to fall asleep at one of the following times:", format_time(time));
 
     let start = 1;
-    let end = 6;
     let non_incl_end = 7;
-    for num_sleepcycles in start..non_incl_end {
-        if num_sleepcycles != end
+    for num_sleepcycles in (start..non_incl_end).rev() {
+        if num_sleepcycles != start 
         {
             print!("{} or ", format_time(sleepcycle_dec(time, num_sleepcycles)));
         }
