@@ -1,55 +1,71 @@
 extern crate chrono;
 use chrono::prelude::*;
 
-fn format_time(time : DateTime<Local>) -> String {
+fn to_naivetime(datetime : DateTime<Local>) -> NaiveTime {
+      NaiveTime::from_hms(datetime.hour(), datetime.minute(), 0) 
+}
+fn format_time(time : NaiveTime) -> String {
     time.format("%I:%M %p").to_string()
 }
 
-fn sleepcycle_inc(time : DateTime<Local>, num_cycles : i32) -> DateTime<Local>
+fn parse_time(time: &str) -> NaiveTime {
+    NaiveTime::parse_from_str(time, "%I:%M %p").unwrap()
+}
+
+fn sleepcycle_inc(time : NaiveTime, num_cycles : i32) -> NaiveTime 
 {
     let going_to_sleep = chrono::Duration::minutes(14);
     let sleep_cycle = chrono::Duration::minutes(90);
     time + sleep_cycle * num_cycles + going_to_sleep
 }
 
-fn sleepcycle_dec(time: DateTime<Local>, num_cycles : i32) -> DateTime<Local>
+fn sleepcycle_dec(time: NaiveTime, num_cycles : i32) -> NaiveTime
 {
     let going_to_sleep = chrono::Duration::minutes(14);
     let sleep_cycle = chrono::Duration::minutes(90);
     time - sleep_cycle * num_cycles - going_to_sleep
 }
 
-fn bedtime_if(time : DateTime<Local>) {
-    println!("If you want to wake up at {}, you should try to fall asleep at one of the following times:", format_time(time));
+pub fn bedtime_if(wakeuptime : NaiveTime) {
+    println!("If you want to wake up at {}, you should try to fall asleep at one of the following times:", format_time(wakeuptime));
 
     let start = 1;
     let non_incl_end = 7;
     for num_sleepcycles in (start..non_incl_end).rev() {
         if num_sleepcycles != start 
         {
-            print!("{} or ", format_time(sleepcycle_dec(time, num_sleepcycles)));
+            print!("{} or ", format_time(sleepcycle_dec(wakeuptime, num_sleepcycles)));
         }
         else 
         {
-            print!("{}", format_time(sleepcycle_dec(time, num_sleepcycles)));
+            print!("{}", format_time(sleepcycle_dec(wakeuptime, num_sleepcycles)));
         }
     }
     println!()
 }
-fn bedtime_rn(time : DateTime<Local>) {
-    println!("If you head to bed right now, you should try to wake up at one of the following times:");
 
+fn wakeuptime_msg(bedtime : NaiveTime) {
+    if bedtime.with_second(0) == Some(to_naivetime(Local::now()))
+    {
+        println!("If you head to bed right now, you should try to wake up at one of the following times:")
+    } else {
+        println!("If you head to bed at {}, you should try to wake up at one of the following times:", bedtime);
+    }
+}
+
+pub fn wakeuptime_if(bedtime : NaiveTime) {
+    wakeuptime_msg(bedtime);
     let start = 1;
     let end = 6;
     let non_incl_end = 7;
     for num_sleepcycles in start..non_incl_end {
         if num_sleepcycles != end
         {
-            print!("{} or ", format_time(sleepcycle_inc(time, num_sleepcycles)));
+            print!("{} or ", format_time(sleepcycle_inc(bedtime, num_sleepcycles)));
         }
         else 
         {
-            print!("{}", format_time(sleepcycle_inc(time, num_sleepcycles)));
+            print!("{}", format_time(sleepcycle_inc(bedtime, num_sleepcycles)));
         }
     }
     println!()
@@ -57,10 +73,6 @@ fn bedtime_rn(time : DateTime<Local>) {
 }
 
 fn main() {
-   let local_now = Local::now(); 
-   let wakeup_time = Local::now() + chrono::Duration::hours(9);
-   bedtime_rn(local_now);
-   println!();
-   bedtime_if(wakeup_time);
-   println!();
+    let potato : &str = "5:30 AM";
+    bedtime_if(parse_time(potato));
 }
